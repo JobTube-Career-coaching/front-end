@@ -20,17 +20,24 @@ function App() {
 
   const fetchSummary = async (videoId) => {
     try {
-      const response = await axios.get(`http://localhost:8000/summary/${videoId}`);
+      const response = await axios.get(`http://localhost:8000/transcript/${videoId}`);
       setSummaries((prevSummaries) => ({
         ...prevSummaries,
-        [videoId]: response.data.summary,
+        [videoId]: response.data.transcript,
       }));
     } catch (error) {
       console.error('Error fetching summary:', error);
-      setSummaries((prevSummaries) => ({
-        ...prevSummaries,
-        [videoId]: '요약 정보를 찾을 수 없습니다.',
-      }));
+      if (error.response && error.response.status === 404) {
+        setSummaries((prevSummaries) => ({
+          ...prevSummaries,
+          [videoId]: '요약 정보를 찾을 수 없습니다.',
+        }));
+      } else {
+        setSummaries((prevSummaries) => ({
+          ...prevSummaries,
+          [videoId]: '알 수 없는 오류가 발생했습니다.',
+        }));
+      }
     }
   };
 
@@ -64,6 +71,7 @@ function App() {
                 <div className="video-details">
                   <h3>{video.title}</h3>
                   <p>{video.channel}</p>
+                  <a href={video.url} target="_blank" rel="noopener noreferrer" className="video-url">YouTube에서 보기</a> {/* YouTube URL 추가 */}
                 </div>
               </div>
               <button
