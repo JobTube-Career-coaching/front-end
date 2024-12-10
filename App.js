@@ -7,10 +7,11 @@ function App() {
     const [videos, setVideos] = useState([]);
     const [summaries, setSummaries] = useState({});
     const [activeMenu, setActiveMenu] = useState('search');
-    const [favorites, setFavorites] = useState([]);
-    const [filteredFavorites, setFilteredFavorites] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [favorites, setFavorites] = useState([]); // 전체 데이터를 저장
+    const [filteredFavorites, setFilteredFavorites] = useState([]); // 필터링된 데이터 저장
+    const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
     let allData = []; // 모든 데이터를 저장할 배열
+    const itemsPerPage = 10; // 페이지당 표시할 항목 수
 
     // 검색된 비디오
     const searchVideos = async () => {
@@ -25,7 +26,7 @@ function App() {
     };
 
     const [filters, setFilters] = useState({
-        title: '',
+        recrutPbancTtl: '',
         recrutSe: '전체보기',               // 공고(채용)구분
         workRgnLst: '전체보기',             // 근무지역목록
         acbgCondLst: '전체보기',            // 학력조건목록
@@ -33,38 +34,15 @@ function App() {
         ncsCdLst: '전체보기',               // NCS코드목록
     });
 
-    const [appliedFilters, setAppliedFilters] = useState(null);
-
-    // 초기 데이터 가져오기
     useEffect(() => {
         fetchFavorites();
     }, []);
 
-    const handleFilterChange = (key, value) => {
-        if (value === "전체보기") {
-            // '전체보기' 선택 시 필터 초기화
-            resetFilters();
-        } else {
-            // 개별 값이 선택되었을 때 필터 값 업데이트 및 필터 적용
-            setFilters((prevFilters) => ({
-                ...prevFilters,
-                [key]: value,
-            }));
-            setAppliedFilters((prevFilters) => ({
-                ...prevFilters,
-                [key]: value,
-            }));
-            applyFilters();
-        }
-    };
-
-
-    
     const fetchFavorites = async () => {
         try {
             console.log('Fetching favorites...');
             const pageSize = 50; // 한 번에 가져올 데이터 수 (API 문서에 따라 변경)
-     
+
             let currentDate = new Date(); // 현재 날짜
             const endDate = new Date();
             endDate.setMonth(endDate.getMonth() + 1); // 1달 후 날짜 계산
@@ -101,67 +79,90 @@ function App() {
             setFavorites(allData);
             setFilteredFavorites(allData);
 
-       
+
             console.log('All favorites fetched successfully:', allData.length);
         } catch (error) {
             console.error('Error in fetchFavorites:', error);
         }
     };
 
-
+    const handleFilterChange = (key, value) => {
+        setFilters({ ...filters, [key]: value });
+    };
 
     const applyFilters = () => {
-        const filtered = favorites.filter((item) => {
-            const { title, recrutSe, workRgnLst, acbgCondLst, hireTypeLst, ncsCdLst } = filters;
+        let filtered = favorites;
 
-            // 안전한 데이터 접근 및 필터 조건 적용
-            return (
-                (title === '' || (item.recrutPbancTtl || '').includes(title)) &&
-                (recrutSe === '전체보기' || item.recrutSeNm === recrutSe) &&
-                (workRgnLst === '전체보기' || (item.workRgnNmLst || []).includes(workRgnLst)) &&
-                (acbgCondLst === '전체보기' || (item.acbgCondNmLst || []).includes(acbgCondLst)) &&
-                (hireTypeLst === '전체보기' || (item.hireTypeNmLst || []).includes(hireTypeLst)) &&
-                (ncsCdLst === '전체보기' || (item.ncsCdNmLst || []).includes(ncsCdLst))
+        // 공고 제목 필터링
+        if (filters.recrutPbancTtl) {
+            filtered = filtered.filter(item =>
+                item.recrutPbancTtl?.toLowerCase().includes(filters.recrutPbancTtl.toLowerCase())
             );
-        });
+        }
+
+        // 채용 구분 필터링
+        if (filters.recrutSe !== '전체보기') {
+            filtered = filtered.filter(item => item.recrutSe === filters.recrutSe);
+        }
+
+        // 근무 지역 필터링
+        if (filters.workRgnLst !== '전체보기') {
+            filtered = filtered.filter(item => item.workRgnLst === filters.workRgnLst);
+        }
+
+        // 학력 조건 필터링
+        if (filters.acbgCondLst !== '전체보기') {
+            filtered = filtered.filter(item => item.acbgCondLst === filters.acbgCondLst);
+        }
+
+        // 고용 유형 필터링
+        if (filters.hireTypeLst !== '전체보기') {
+            filtered = filtered.filter(item => item.hireTypeLst === filters.hireTypeLst);
+        }
+
+        // NCS 코드 필터링 (쉼표로 구분된 값 중 선택한 값이 포함되어 있는지 확인)
+        if (filters.ncsCdLst !== '전체보기') {
+            filtered = filtered.filter(item =>
+                item.ncsCdLst?.split(',').includes(filters.ncsCdLst)
+            );
+        }
 
         setFilteredFavorites(filtered);
-        setAppliedFilters(filters);
-        setCurrentPage(1); // 필터 적용시 첫 페이지로 리셋
+        setCurrentPage(1); // 필터 적용 시 첫 페이지로 초기화
     };
 
 
-    // 필터 초기화
+
     const resetFilters = () => {
         setFilters({
-            title: '',
+            recrutPbancTtl: '',
             recrutSe: '전체보기',
             workRgnLst: '전체보기',
             acbgCondLst: '전체보기',
             hireTypeLst: '전체보기',
             ncsCdLst: '전체보기',
         });
-        setFilteredFavorites(favorites);
-        setAppliedFilters(null);
-        setCurrentPage(1); // 필터 초기화 시 첫 페이지로 리셋
+        setFilteredFavorites(favorites); // 초기 데이터로 복원
+        setCurrentPage(1);
     };
 
-    // 페이지네이션 처리
-    const itemsPerPage = 10; // 한 페이지에 표시할 아이템 수
     const totalPages = Math.ceil(filteredFavorites.length / itemsPerPage);
 
-    // 현재 페이지의 아이템을 계산
-    const currentItems = favorites.slice(
+    const currentItems = filteredFavorites.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
 
     const handlePrevPage = () => {
-        if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
     };
 
     const handleNextPage = () => {
-        if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
     };
 
     return (
@@ -199,15 +200,15 @@ function App() {
                 {activeMenu === 'favorites' && (
                     <div>
                         <div className="filter-section">
-                            <h2>검색 및 필터링</h2>
+                            <h2>[ 검색 및 필터링 ]</h2>
                             <div className="filter-controls">
                                 <div>
                                     <label>공고 제목</label>
                                     <input
                                         type="text"
                                         placeholder="공고 제목을 입력해주세요."
-                                        value={filters.title}
-                                        onChange={(e) => handleFilterChange('title', e.target.value)}
+                                        value={filters.recrutPbancTtl}
+                                        onChange={(e) => handleFilterChange('recrutPbancTtl', e.target.value)}
                                     />
                                 </div>
                                 <div>
@@ -323,54 +324,62 @@ function App() {
                             </div>
                         </div>
 
-                        {activeMenu === 'favorites' && (
-                            <div className="favorites-section">
-                                <h2>(현재 모집 중인) 취업 공고 </h2>
-                                {favorites.length > 0 ? (
-                                    <div>
-                                        <table className="favorites-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>공시기관</th>
-                                                    <th>공고</th>
-                                                    <th>채용구분</th>
-                                                    <th>고용형태</th>
-                                                    <th>근무지</th>
+                        <div className="favorites-section">
+                            <h2>( 현재 모집 중인 ) 취업 공고</h2>
+                            {filteredFavorites.length > 0 ? (
+                                <div>
+                                    <table className="favorites-table">
+                                        <thead>
+                                            <tr>
+                                                <th>공시기관</th>
+                                                <th>공고</th>
+                                                <th>채용구분</th>
+                                                <th>고용형태</th>
+                                                <th>근무지</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {currentItems.map((item, index) => (
+                                                <tr key={index}>
+                                                    <td>{item.instNm || '정보 없음'}</td>
+                                                    <td>
+                                                        {item.srcUrl ? (
+                                                            <a
+                                                                href={item.srcUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                style={{ textDecoration: 'none', color: '#007bff' }}
+                                                            >
+                                                                {item.recrutPbancTtl || '정보 없음'}
+                                                            </a>
+                                                        ) : (
+                                                            item.recrutPbancTtl || '정보 없음'
+                                                        )}
+                                                    </td>
+                                                    <td>{item.recrutSeNm || '정보 없음'}</td>
+                                                    <td>{item.hireTypeNmLst || '정보 없음'}</td>
+                                                    <td>{item.workRgnNmLst || '정보 없음'}</td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                {currentItems.map((item, index) => (
-                                                    <tr key={index}>
-                                                        <td>{item.instNm || '정보 없음'}</td>
-                                                        <td>{item.recrutPbancTtl || '정보 없음'}</td>
-                                                        <td>{item.recrutSeNm || '정보 없음'}</td>
-                                                        <td>{item.hireTypeNmLst || '정보 없음'}</td>
-                                                        <td>{item.workRgnNmLst || '정보 없음'}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                            ))}
+                                        </tbody>
+                                    </table>
 
-                                        <div className="pagination">
-                                            <button onClick={handlePrevPage} disabled={currentPage === 1}>
-                                                이전
-                                            </button>
-                                            <span>
-                                                {currentPage} / {totalPages}
-                                            </span>
-                                            <button
-                                                onClick={handleNextPage}
-                                                disabled={currentPage === totalPages}
-                                            >
-                                                다음
-                                            </button>
-                                        </div>
+                                    <div className="pagination">
+                                        <button onClick={handlePrevPage} disabled={currentPage === 1}>
+                                            이전
+                                        </button>
+                                        <span>
+                                            {currentPage} / {totalPages}
+                                        </span>
+                                        <button onClick={handleNextPage} disabled={currentPage === totalPages}>
+                                            다음
+                                        </button>
                                     </div>
-                                ) : (
-                                    <p>데이터를 불러오는 중이거나 공고가 없습니다.</p>
-                                )}
-                            </div>
-                        )}
+                                </div>
+                            ) : (
+                                <p>데이터를 불러오는 중이거나 공고가 없습니다.</p>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
