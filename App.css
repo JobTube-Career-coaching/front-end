@@ -110,6 +110,57 @@ body {
     padding: 20px;
 }
 
+.pdf-section {
+    padding: 30px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 800px;
+    text-align: center;
+}
+
+.pdf-upload-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+    .pdf-upload-label:hover {
+        background-color: #0056b3;
+    }
+
+.pdf-summary {
+    margin-top: 20px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+    .pdf-summary h3 {
+        margin-top: 0;
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .pdf-summary p {
+        margin: 10px 0 0;
+        font-size: 16px;
+        color: #555;
+        line-height: 1.6;
+    }
+
+
 .filter-section {
     padding: 30px;
     background-color: #f9f9f9;
@@ -135,7 +186,7 @@ body {
 }
 
     .filter-controls > div {
-        flex: 1 1 200px; 
+        flex: 1 1 200px; /* 최소 너비 200px, 공간에 따라 유연하게 조정 */
         display: flex;
         flex-direction: column;
         gap: 10px;
